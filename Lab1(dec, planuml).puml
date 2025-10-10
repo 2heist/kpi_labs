@@ -1,0 +1,62 @@
+@startuml
+!theme plain
+
+class USER {
+    +user_id : int
+    +name : string
+    +email : string
+    +phone_number : string
+    +driver_license_number : string
+}
+
+class CAR {
+    +car_id : int
+    +license_plate : string
+    +brand : string
+    +model : string
+    +year : int
+    +price_per_hour : float
+}
+
+class RENTAL {
+    +rental_id : int
+    +start_time : datetime
+    +end_time : datetime
+    +total_cost : float
+    +status : string
+}
+
+class PAYMENT {
+    +payment_id : int
+    +amount : float
+    +payment_method : string
+    +status : string
+    +payment_date : datetime
+}
+
+class REVIEW {
+    +review_id : int
+    +rating : int
+    +comment : string
+    +review_date : date
+}
+
+class CAR_STATUS {
+    +status_id : int
+    +status_name : string
+}
+
+class CAR_LOCATION {
+    +location_id : int
+    +city : string
+    +address : string
+}
+
+USER o-- "0..*" RENTAL : makes
+CAR *-- "0..*" RENTAL : is rented in
+RENTAL *-- PAYMENT : has
+USER o-- "0..*" REVIEW : writes
+CAR o-- "0..*" REVIEW : receives
+CAR *-- CAR_STATUS : has
+CAR *-- CAR_LOCATION : located at
+@enduml
