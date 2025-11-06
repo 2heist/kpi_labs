@@ -1,0 +1,56 @@
+@startuml
+left to right direction
+
+actor "User" as U
+actor "Admin" as A
+actor "Payment Service" as PS
+actor "License Verification API" as LVA
+actor "GPS Service" as GPS
+
+U --> (Login)
+U --> (Register User)
+U --> (Search Car)
+U --> (Start Rental)
+U --> (End Rental)
+U --> (Pay for car)
+U --> (View Reviews)
+U --> (Add Review)
+U --> (Report Problem)
+U --> (View Car Details)
+U --> (View Rental History)
+U --> (Check Availability)
+
+LVA --> (Verify License)
+PS --> (Verify Payment)
+GPS --> (Get Location)
+
+A --> (Manage Fleet)
+A --> (Manage Users)
+A --> (View Rentals)
+A --> (View Statistics)
+A --> (View Car on map)
+A --> (Set Pricing)
+
+(Reset Password) --|> (Login) : <<extends>>
+(Login) ..> (Register User) : <<use>>
+(Register User) ..> (Verify License) : <<use>>
+(View Reviews) --|> (View Car Details) : <<extends>>
+(View Reviews) ..> (Add Review) : <<use>>
+(Pay for car) ..> (Calculate Cost) : <<use>>
+(Calculate Cost) ..> (Verify Payment) : <<use>>
+(Start Rental) ..> (Check Availability) : <<use>>
+(Unlock car) --|> (Start Rental) : <<extends>>
+(End Rental) ..> (Start Rental) : <<use>>
+(End Rental) ..> (Calculate Cost) : <<use>>
+(Lock car) --|> (End Rental) : <<extends>>
+(Calculate Cost) ..> (Set Pricing) : <<use>>
+(Search Car) ..> (Get Location) : <<use>>
+(View Car on map) ..> (Get Location) : <<use>>
+(View Car on map) --|> (Search Car) : <<extends>>
+(View Statistics) ..> (View Reviews) : <<use>>
+(View Statistics) ..> (View Rental History) : <<use>>
+(View Statistics) ..> (Report Problem) : <<use>>
+(Generate Report) --|> (View Statistics) : <<extends>>
+(View Statistics) ..> (View Reviews) : <<use>>
+
+@enduml
