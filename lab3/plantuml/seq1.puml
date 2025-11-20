@@ -1,0 +1,42 @@
+@startuml
+actor User
+participant "AuthController" as Auth
+participant "UserController" as UserCtrl
+participant "License API" as LVA
+database DB
+
+== Registration ==
+User -> Auth : register(data)
+Auth -> UserCtrl : validate(data)
+UserCtrl --> Auth : ok
+Auth -> LVA : verifyLicense(licenseNumber)
+
+alt valid license
+    LVA --> Auth : valid
+    Auth -> DB : createUser()
+    DB --> Auth : userId
+    Auth --> User : success(userId)
+else invalid license
+    LVA --> Auth : invalid
+    Auth --> User : error("License invalid")
+end
+
+== Login ==
+User -> Auth : login(email, pwd)
+Auth -> DB : findUserByEmail(email)
+
+alt user found
+    DB --> Auth : userRecord
+    Auth -> Auth : verifyPassword(pwd)
+    
+    alt password correct
+        Auth --> User : loginSuccess(token)
+    else password incorrect
+        Auth --> User : error("Invalid credentials")
+    end
+else user not found
+    DB --> Auth : null
+    Auth --> User : error("Invalid credentials")
+end
+
+@enduml

@@ -1,0 +1,72 @@
+@startuml
+actor User
+participant "CarController" as Car
+participant "RentalController" as Rental
+participant "PaymentService" as Payment
+participant "External APIs" as Ext
+database DB
+
+== Check Availability ==
+User -> Car : 1. checkAvailability(carId)
+Car -> DB : 2. getCarStatus(carId)
+alt available
+    DB --> Car : 3. available
+    Car --> User : 4. available
+else unavailable
+    DB --> Car : 3. unavailable
+    Car --> User : 4. error
+end
+
+== Start Rental ==
+User -> Rental : 5. startRental(userId, carId)
+Rental -> DB : 6. validate & create rental
+DB --> Rental : 7. rentalId
+
+Rental -> Ext : 8. getGPS(carId)
+Ext --> Rental : 9. location
+
+Rental -> Car : 10. unlockCar(carId)
+Car -> DB : 11. updateStatus("unlocked")
+Car --> Rental : 12. unlocked
+Rental --> User : 13. started(rentalId)
+
+... User is driving ...
+
+== End Rental ==
+User -> Rental : 14. endRental(rentalId)
+Rental -> DB : 15. getRentalData()
+DB --> Rental : 16. rentalData
+
+Rental -> Ext : 17. getGPS(carId)
+Ext --> Rental : 18. endLocation
+
+Rental -> Payment : 19. calculateAndCharge(rentalData)
+Payment -> DB : 20. getPricingRules()
+DB --> Payment : 21. rules
+Payment -> Payment : 22. calculate(duration, distance)
+Payment -> Ext : 23. charge(totalCost)
+
+alt payment OK
+    Ext --> Payment : 23.1 success
+    Payment -> DB : 23.2 savePayment()
+    Payment --> Rental : 23.3 confirmed(receipt)
+    
+    Rental -> Car : 24. lockCar(carId)
+    Car -> DB : 25. updateStatus("available")
+    Car --> Rental : 26. locked
+    
+    Rental -> DB : 27. closeRental()
+    Rental --> User : 28. completed(receipt)
+    
+else payment FAIL
+    Ext --> Payment : 23.1 failed
+    Payment --> Rental : 23.2 failed
+    
+    Rental -> Car : 24. lockCar(carId)
+    Car -> DB : 25. updateStatus("blocked")
+    Car --> Rental : 26. locked
+    
+    Rental --> User : 27. error("Payment failed")
+end
+
+@enduml
