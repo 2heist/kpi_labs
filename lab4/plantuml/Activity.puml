@@ -1,0 +1,89 @@
+@startuml
+title Full Rental Process (Clean Arrows)
+
+skinparam conditionStyle diamond
+skinparam monochrome true
+skinparam shadowing false
+skinparam activityShape rectangle
+
+|User|
+start
+:Select Car on Map;
+
+|CarSharing System|
+:Request "Check Availability";
+:Check Car Status in DB;
+
+if (Is Car Available?) then ([No])
+  |CarSharing System|
+  :Send "Car is unavailable";
+  |User|
+  :Get "Car is unavailable" Message;
+  stop
+endif
+
+-> [Yes];
+
+|User|
+:Click "Start Rental";
+
+|CarSharing System|
+:Create Rental Record;
+:Send "Unlock" Command;
+
+|External Services|
+:Unlock Car;
+
+|User|
+:Drive Car;
+:Click "End Rental";
+
+|CarSharing System|
+fork
+  :Calculate Duration;
+fork again
+  |External Services|
+  :Get Final GPS Location;
+  |CarSharing System|
+end fork
+
+:Calculate Final Price;
+
+|External Services|
+:Process Payment;
+
+if (Payment Success?) then ([Yes])
+  |CarSharing System|
+
+  :Save Payment Record;
+   -> \n;
+  :Send "Lock" Command;
+   -> \n\n;
+  
+  
+  |External Services|
+  :Lock Car;
+  |CarSharing System|
+   -> \n\n;
+  :Update Status -> "Available";
+  :Close Rental;
+  
+  |User|
+  :Receive Receipt;
+  stop
+  
+else ([No])
+  |CarSharing System|
+  :Log Payment Error;
+  :Send "Lock" Command;
+  
+  |External Services|
+  :Lock Car;
+  |CarSharing System|
+  :Update Status -> "Blocked";
+  
+  |User|
+  :Receive "Payment Failed";
+  stop
+endif
+@enduml
