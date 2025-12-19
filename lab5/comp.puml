@@ -1,0 +1,123 @@
+@startuml CarSharingComponentDiagram
+left to right direction
+
+skinparam database {
+    BackgroundColor Wheat
+    BorderColor Black
+}
+
+rectangle "Clients" {
+    [Mobile App] as MobileApp
+    [Web App] as WebApp
+    portout " " as Cli_Out
+    
+    MobileApp -- Cli_Out
+    WebApp -- Cli_Out
+}
+
+package "Car Sharing System" {
+
+    rectangle "API Gateway" as Gateway {
+        portin " " as GW_In
+        portout " " as GW_Out
+        component "   Gateway Controller   " as GW_Ctrl
+        
+        GW_In -- GW_Ctrl
+        GW_Ctrl -- GW_Out
+    }
+
+    interface "Auth" as Auth
+    interface "User" as User
+    interface "Car" as Car
+    interface "Rental" as Rental
+    interface "Payment" as Payment
+    interface "HTTP API" as Cli
+
+    
+    rectangle "Auth Module" as AuthMod {
+        portin " " as Auth_In
+        portout " " as Auth_Out
+        component "   AuthSvc   " as AuthSvc
+        
+        Auth_In -- AuthSvc
+        AuthSvc -- Auth_Out
+    }
+
+    rectangle "User Module" as UserMod {
+        portin " " as User_In
+        portout " " as User_Out
+        component "   UserSvc   " as UserSvc
+        
+        User_In -- UserSvc
+        UserSvc -- User_Out
+    }
+
+    rectangle "Car Module" as CarMod {
+        portin " " as Car_In
+        portout " " as Car_Out
+        component "   CarSvc   " as CarSvc
+        component "Telemetry Svc" as CarTel
+        Car_In -- CarSvc
+        CarSvc -- CarTel
+        CarTel -- Car_Out
+    }
+
+    rectangle "Rental Module" as RentalMod {
+        portin " " as Rental_In
+        portout " " as Rental_Out
+        component "   RentalSvc   " as RentalSvc
+        component "  Pricing Engine   " as PricingEng
+        Rental_In -- RentalSvc
+        RentalSvc -- PricingEng
+        PricingEng -- Rental_Out
+    }
+
+    rectangle "Payment Module" as PayMod {
+        portin " " as Pay_In
+        portout " " as Pay_Out
+        component "   PaymentSvc   " as PaySvc
+        
+        Pay_In -- PaySvc
+        PaySvc -- Pay_Out
+    }
+
+    AuthMod -[hidden]down- UserMod
+    UserMod -[hidden]down- CarMod
+    CarMod -[hidden]down- RentalMod
+    RentalMod -[hidden]down- PayMod
+    
+    Cli_Out --( Cli
+    Cli -- GW_In
+
+    GW_Out --( User
+    User -- User_In
+    
+    GW_Out --( Auth
+    Auth -- Auth_In
+
+    GW_Out --( Car
+    Car -- Car_In
+
+    GW_Out --( Rental
+    Rental -- Rental_In
+
+    Rental_Out --( Payment
+    Payment -right- Pay_In
+
+    interface "Identity" as Identity
+    Auth_Out -down- Identity
+    User_In -up-( Identity 
+
+    interface "CarAvail" as CarAvail
+    Car_Out -up- CarAvail
+    Rental_In --( CarAvail 
+}
+
+database "PostgreSQL" as DB
+
+Pay_Out -- DB
+User_Out -- DB
+Car_Out -- DB
+Rental_Out -- DB
+
+@enduml
